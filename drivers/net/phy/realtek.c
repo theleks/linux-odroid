@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/etherdevice.h>
+#include <linux/amlogic_scpi_protocol.h>
 
 #define RTL821x_PHYSR				0x11
 #define RTL821x_PHYSR_DUPLEX			BIT(13)
@@ -374,6 +375,11 @@ static int rtl8211f_shutdown(struct phy_device *phydev)
 		/* Pin 31 pull high*/
 		val = phy_read_paged(phydev, 0xd40, 0x16);
 		phy_write_paged(phydev, 0xd40, 0x16, val | (1 << 5));
+#ifdef CONFIG_AMLOGIC_SCPI
+		/* Enable WOL on system controller */
+		enable_wol = 1;
+		scpi_send_usr_data(SCPI_CL_WOL, &enable_wol, sizeof(enable_wol));
+#endif
 	}
 
 	return 0;

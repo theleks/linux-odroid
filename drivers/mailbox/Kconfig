@@ -16,6 +16,27 @@ config ARM_MHU
 	  The controller has 3 mailbox channels, the last of which can be
 	  used in Secure mode only.
 
+config MESON_MHU
+	tristate "Meson MHU Mailbox"
+	default n
+	select AMLOGIC_SCPI
+	help
+	  MESON MHU Mailbox driver.
+          .
+            
+config AMLOGIC_SCPI
+	tristate "ARM System Control and Power Interface (SCPI) Message Protocol"
+	default n
+	help
+	  System Control and Power Interface (SCPI) Message Protocol is
+	  defined for the purpose of communication between the Application
+	  Cores(AP) and the System Control Processor(SCP). The MHU peripheral
+	  provides a mechanism for inter-processor communication between SCP
+	  and AP.
+
+          This protocol library provides interface for all the client drivers
+	  making use of the features offered by the SCP.
+
 config ARM_MHU_V2
 	tristate "ARM MHUv2 Mailbox"
 	depends on ARM_AMBA

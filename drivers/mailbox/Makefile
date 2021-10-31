@@ -58,3 +58,9 @@ obj-$(CONFIG_SUN6I_MSGBOX)	+= sun6i-msgbox.o
 obj-$(CONFIG_SPRD_MBOX)		+= sprd-mailbox.o
 
 obj-$(CONFIG_QCOM_IPCC)		+= qcom-ipcc.o
+
+obj-$(CONFIG_MESON_MHU)		+= meson_mhu.o
+
+obj-$(CONFIG_AMLOGIC_SCPI)	+= amlogic_scpi_protocol.o
+
+

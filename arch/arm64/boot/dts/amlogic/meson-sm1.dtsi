@@ -13,6 +13,17 @@
 / {
 	compatible = "amlogic,sm1";
 
+	mailbox: mhu@c883c400 {
+		compatible = "amlogic, meson_mhu";
+		reg = <0x0 0xff63c400 0x0 0x4c>,   /* MHU registers */
+		      <0x0 0xfffe7000 0x0 0x800>;   /* Payload area */
+		interrupts = <0 209 1>,   /* low priority interrupt */
+			     <0 210 1>;   /* high priority interrupt */
+		#mbox-cells = <1>;
+		mbox-names = "cpu_to_scp_low", "cpu_to_scp_high";
+		mboxes = <&mailbox 0 &mailbox 1>;
+	};
+
 	tdmif_a: audio-controller-0 {
 		compatible = "amlogic,axg-tdm-iface";
 		#sound-dai-cells = <0>;
