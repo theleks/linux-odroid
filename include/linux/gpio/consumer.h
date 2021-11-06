@@ -56,6 +56,14 @@ enum gpiod_flags {
 	GPIOD_OUT_HIGH_OPEN_DRAIN = GPIOD_OUT_HIGH | GPIOD_FLAGS_BIT_OPEN_DRAIN,
 };
 
+#ifdef CONFIG_PINCTRL_MESON
+enum gpiod_pull_type {
+	GPIOD_PULL_DIS = 0,
+	GPIOD_PULL_DOWN = 1,
+	GPIOD_PULL_UP = 2,
+};
+#endif
+
 #ifdef CONFIG_GPIOLIB
 
 /* Return the number of GPIOs associated with a device / function */
@@ -134,6 +142,9 @@ int gpiod_set_raw_array_value(unsigned int array_size,
 			      struct gpio_desc **desc_array,
 			      struct gpio_array *array_info,
 			      unsigned long *value_bitmap);
+#ifdef CONFIG_PINCTRL_MESON
+int gpiod_set_pull(struct gpio_desc *desc, int value);
+#endif
 
 /* Value get/set from sleeping context */
 int gpiod_get_value_cansleep(const struct gpio_desc *desc);
@@ -167,6 +178,9 @@ int gpiod_cansleep(const struct gpio_desc *desc);
 
 int gpiod_to_irq(const struct gpio_desc *desc);
 int gpiod_set_consumer_name(struct gpio_desc *desc, const char *name);
+#ifdef CONFIG_PINCTRL_MESON
+int gpiod_set_pull_cansleep(struct gpio_desc *desc, int value);
+#endif
 
 /* Convert between the old gpio_ and new gpiod_ interfaces */
 struct gpio_desc *gpio_to_desc(unsigned gpio);
@@ -414,6 +428,14 @@ static inline int gpiod_set_raw_array_value(unsigned int array_size,
 	return 0;
 }
 
+#ifdef CONFIG_PINCTRL_MESON
+static inline int gpiod_set_pull(struct gpio_desc *desc, int value)
+{
+	WARN_ON(1);
+	return -EINVAL;
+}
+#endif
+
 static inline int gpiod_get_value_cansleep(const struct gpio_desc *desc)
 {
 	/* GPIO can never have been requested */
@@ -434,6 +456,15 @@ static inline void gpiod_set_value_cansleep(struct gpio_desc *desc, int value)
 	/* GPIO can never have been requested */
 	WARN_ON(desc);
 }
+
+#ifdef CONFIG_PINCTRL_MESON
+static inline int gpiod_set_pull_cansleep(struct gpio_desc *desc, int value)
+{
+	WARN_ON(1);
+	return -EINVAL;
+}
+#endif
+
 static inline int gpiod_set_array_value_cansleep(unsigned int array_size,
 					    struct gpio_desc **desc_array,
 					    struct gpio_array *array_info,

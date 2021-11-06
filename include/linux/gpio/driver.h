@@ -387,6 +387,10 @@ struct gpio_chip {
 	int			(*set_config)(struct gpio_chip *gc,
 					      unsigned int offset,
 					      unsigned long config);
+#ifdef CONFIG_PINCTRL_MESON
+	int			(*set_pull)(struct gpio_chip *chip,
+						unsigned int offset, int value);
+#endif
 	int			(*to_irq)(struct gpio_chip *gc,
 						unsigned int offset);
 

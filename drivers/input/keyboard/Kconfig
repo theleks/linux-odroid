@@ -67,6 +67,12 @@ config KEYBOARD_AMIGA
 	  To compile this driver as a module, choose M here: the
 	  module will be called amikbd.
 
+config KEYBOARD_AMLOGIC_GPIO
+	tristate "Amlogic gpio key device surport"
+	default n
+	help
+	  Say Y here if you want to use the amlogic hold key.
+
 config KEYBOARD_APPLESPI
 	tristate "Apple SPI keyboard and trackpad"
 	depends on ACPI && EFI
