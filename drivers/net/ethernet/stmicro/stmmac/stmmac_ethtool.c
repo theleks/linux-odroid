@@ -717,6 +717,7 @@ static void stmmac_get_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
 
 static int stmmac_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
 {
+	static bool wol_irq_disabled = true;
 	struct stmmac_priv *priv = netdev_priv(dev);
 	u32 support = WAKE_MAGIC | WAKE_UCAST;
 
@@ -743,10 +744,14 @@ static int stmmac_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
 	if (wol->wolopts) {
 		pr_info("stmmac: wakeup enable\n");
 		device_set_wakeup_enable(priv->device, 1);
-		enable_irq_wake(priv->wol_irq);
+		if (wol_irq_disabled)
+			enable_irq_wake(priv->wol_irq);
+		wol_irq_disabled = false;
 	} else {
 		device_set_wakeup_enable(priv->device, 0);
-		disable_irq_wake(priv->wol_irq);
+		if (!wol_irq_disabled)
+			disable_irq_wake(priv->wol_irq);
+		wol_irq_disabled = true;
 	}
 
 	mutex_lock(&priv->lock);
