@@ -344,14 +344,11 @@ static int rtl8211f_set_wol(struct phy_device *phydev,
 		return 0;
 	}
 
-	if ((wol->wolopts & WAKE_UCAST)
+	if ((wol->wolopts & (WAKE_UCAST | WAKE_MAGIC))
 			&& is_valid_ether_addr(mac)) {
 		phy_write_paged(phydev, 0xd8c, 0x10, (mac[1] << 8) | mac[0]);
 		phy_write_paged(phydev, 0xd8c, 0x11, (mac[3] << 8) | mac[2]);
 		phy_write_paged(phydev, 0xd8c, 0x12, (mac[5] << 8) | mac[4]);
-	}
-
-	if (wol->wolopts & WAKE_MAGIC) {
 		phy_write_paged(phydev, 0xd8a, 0x10, 0x1000);
 		phy_write_paged(phydev, 0xd8a, 0x11, 0x9fff);
 	}
