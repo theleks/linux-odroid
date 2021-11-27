@@ -341,7 +341,6 @@ static int rtl8211f_set_wol(struct phy_device *phydev,
 	const u8 *mac = (const u8 *)netdev->dev_addr;
 
 	if ((wol->wolopts & (WAKE_MAGIC | WAKE_UCAST)) == 0) {
-		disable_irq_wake(phydev->irq);
 		return 0;
 	}
 
@@ -356,8 +355,6 @@ static int rtl8211f_set_wol(struct phy_device *phydev,
 		phy_write_paged(phydev, 0xd8a, 0x10, 0x1000);
 		phy_write_paged(phydev, 0xd8a, 0x11, 0x9fff);
 	}
-
-	enable_irq_wake(phydev->irq);
 
 	return 0;
 }
