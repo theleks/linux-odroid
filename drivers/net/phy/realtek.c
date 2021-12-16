@@ -79,6 +79,7 @@ MODULE_LICENSE("GPL");
 struct rtl821x_priv {
 	u16 phycr1;
 	u16 phycr2;
+	bool wol_enable;
 };
 
 static int rtl821x_read_page(struct phy_device *phydev)
@@ -117,6 +118,7 @@ static int rtl821x_probe(struct phy_device *phydev)
 	if (of_property_read_bool(dev->of_node, "realtek,clkout-disable"))
 		priv->phycr2 &= ~RTL8211F_CLKOUT_EN;
 
+	priv->wol_enable = false;
 	phydev->priv = priv;
 
 	return 0;
@@ -339,18 +341,35 @@ static int rtl8211f_set_wol(struct phy_device *phydev,
 {
 	struct net_device *netdev = phydev->attached_dev;
 	const u8 *mac = (const u8 *)netdev->dev_addr;
+	struct rtl821x_priv *priv = phydev->priv;
 
-	if ((wol->wolopts & (WAKE_MAGIC | WAKE_UCAST)) == 0) {
-		return 0;
-	}
-
-	if ((wol->wolopts & (WAKE_UCAST | WAKE_MAGIC))
-			&& is_valid_ether_addr(mac)) {
+	if ((wol->wolopts & (WAKE_MAGIC | WAKE_UCAST)) == 0)
+		priv->wol_enable = false;
+	else if ((wol->wolopts & (WAKE_UCAST | WAKE_MAGIC)) && is_valid_ether_addr(mac)) {
+		/* Config mac address for wol*/
 		phy_write_paged(phydev, 0xd8c, 0x10, (mac[1] << 8) | mac[0]);
 		phy_write_paged(phydev, 0xd8c, 0x11, (mac[3] << 8) | mac[2]);
 		phy_write_paged(phydev, 0xd8c, 0x12, (mac[5] << 8) | mac[4]);
+		priv->wol_enable = true;
+        }
+	return 0;
+}
+
+static int rtl8211f_shutdown(struct phy_device *phydev)
+{
+	struct rtl821x_priv *priv = phydev->priv;
+	int val, enable_wol;
+
+	if (priv->wol_enable == true) {
+		/* Set magic packet for wol*/
 		phy_write_paged(phydev, 0xd8a, 0x10, 0x1000);
 		phy_write_paged(phydev, 0xd8a, 0x11, 0x9fff);
+		/* Pad isolation*/
+		val = phy_read_paged(phydev, 0xd8a, 0x13);
+		phy_write_paged(phydev, 0xd8a, 0x13, val | (0x1 << 15));
+		/* Pin 31 pull high*/
+		val = phy_read_paged(phydev, 0xd40, 0x16);
+		phy_write_paged(phydev, 0xd40, 0x16, val | (1 << 5));
 	}
 
 	return 0;
@@ -951,6 +970,7 @@ static struct phy_driver realtek_drvs[] = {
 		.set_wol	= rtl8211f_set_wol,
 		.read_page	= rtl821x_read_page,
 		.write_page	= rtl821x_write_page,
+		.shutdown	= rtl8211f_shutdown,
 	}, {
 		.name		= "Generic FE-GE Realtek PHY",
 		.match_phy_device = rtlgen_match_phy_device,

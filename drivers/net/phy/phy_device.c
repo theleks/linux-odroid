@@ -3125,6 +3125,9 @@ static void phy_shutdown(struct device *dev)
 {
 	struct phy_device *phydev = to_phy_device(dev);
 
+	if (phydev->drv->shutdown)
+		phydev->drv->shutdown(phydev);
+
 	if (phydev->state == PHY_READY || !phydev->attached_dev)
 		return;
 

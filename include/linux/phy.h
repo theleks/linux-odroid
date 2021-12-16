@@ -758,6 +758,8 @@ struct phy_driver {
 	int (*suspend)(struct phy_device *phydev);
 	/** @resume: Resume the hardware, restoring state if needed */
 	int (*resume)(struct phy_device *phydev);
+	/** @shutdown: Shutdown the hardware, doing phy specific tasks */
+	int (*shutdown)(struct phy_device *phydev);
 
 	/**
 	 * @config_aneg: Configures the advertisement and resets
