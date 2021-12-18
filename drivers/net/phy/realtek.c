@@ -28,6 +28,7 @@
 #define RTL821x_EXT_PAGE_SELECT			0x1e
 #define RTL821x_PAGE_SELECT			0x1f
 
+#define RTL8211F_BMCR				0x00
 #define RTL8211F_PHYCR1				0x18
 #define RTL8211F_PHYCR2				0x19
 #define RTL8211F_INSR				0x1d
@@ -361,6 +362,8 @@ static int rtl8211f_shutdown(struct phy_device *phydev)
 	int val, enable_wol;
 
 	if (priv->wol_enable == true) {
+		/* Set speed to 10Mbps */
+		phy_write(phydev, RTL8211F_BMCR, 0x0); /* 10Mbps */
 		/* Set magic packet for wol*/
 		phy_write_paged(phydev, 0xd8a, 0x10, 0x1000);
 		phy_write_paged(phydev, 0xd8a, 0x11, 0x9fff);
