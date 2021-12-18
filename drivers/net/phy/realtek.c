@@ -29,6 +29,7 @@
 #define RTL821x_PAGE_SELECT			0x1f
 
 #define RTL8211F_BMCR				0x00
+#define RTL8211F_LCR				0x10
 #define RTL8211F_PHYCR1				0x18
 #define RTL8211F_PHYCR2				0x19
 #define RTL8211F_INSR				0x1d
@@ -456,6 +457,15 @@ static int rtl8211f_config_init(struct phy_device *phydev)
 			ERR_PTR(ret));
 		return ret;
 	}
+
+#ifdef CONFIG_ARCH_MESON64_ODROIDHC4
+	/* Config ehernet leds for Odroid HC4 board
+	 * 1000Mbps : orange
+	 * 100Mbps  : orange and green
+	 * 10Mbps   : green
+	 */
+	phy_write_paged(phydev, 0xd04, RTL8211F_LCR, BIT(14) | BIT(13) | BIT(11) | BIT(9) | BIT(6) | BIT(5));
+#endif
 
 	return genphy_soft_reset(phydev);
 }
