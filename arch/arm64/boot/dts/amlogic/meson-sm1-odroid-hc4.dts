@@ -154,3 +154,10 @@
 	phys = <&usb2_phy0>, <&usb2_phy1>;
 	phy-names = "usb2-phy0", "usb2-phy1";
 };
+
+&fan0 {
+	fan-supply = <&vcc_5v>;
+	interrupt-parent = <&gpio_intc>;
+	interrupts = <84 IRQ_TYPE_EDGE_FALLING>;
+	pulses-per-revolutions = <2>;
+};
