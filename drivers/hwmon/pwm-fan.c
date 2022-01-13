@@ -47,10 +47,12 @@ struct pwm_fan_ctx {
 
 	struct hwmon_chip_info info;
 	struct hwmon_channel_info fan_channel;
+
+	bool pwm_enable;
 };
 
 static const u32 pwm_fan_channel_config_pwm[] = {
-	HWMON_PWM_INPUT,
+	HWMON_PWM_INPUT | HWMON_PWM_ENABLE,
 	0
 };
 
@@ -99,6 +101,8 @@ static int  __set_pwm(struct pwm_fan_ctx *ctx, unsigned long pwm)
 	struct pwm_state *state = &ctx->pwm_state;
 
 	mutex_lock(&ctx->lock);
+	if (!ctx->pwm_enable)
+		pwm = MAX_PWM;
 	if (ctx->pwm_value == pwm)
 		goto exit_set_pwm_err;
 
@@ -134,12 +138,29 @@ static int pwm_fan_write(struct device *dev, enum hwmon_sensor_types type,
 	if (val < 0 || val > MAX_PWM)
 		return -EINVAL;
 
-	ret = __set_pwm(ctx, val);
-	if (ret)
-		return ret;
-
-	pwm_fan_update_state(ctx, val);
-	return 0;
+	switch (type) {
+	case hwmon_pwm:
+		switch (attr) {
+		case hwmon_pwm_enable:
+			if ((val == 0) || (val == 1)) {
+				ctx->pwm_enable = val;
+			}
+			else
+				return -EINVAL;
+		case hwmon_pwm_input:
+			ret = __set_pwm(ctx, val);
+			if (ret)
+				return ret;
+			pwm_fan_update_state(ctx, val);
+			return 0;
+		default:
+			return -ENOTSUPP;
+		}
+	case hwmon_fan:
+		return -ENOTSUPP;
+	default:
+		return -ENOTSUPP;
+	}
 }
 
 static int pwm_fan_read(struct device *dev, enum hwmon_sensor_types type,
@@ -149,13 +170,20 @@ static int pwm_fan_read(struct device *dev, enum hwmon_sensor_types type,
 
 	switch (type) {
 	case hwmon_pwm:
-		*val = ctx->pwm_value;
+		switch (attr) {
+			case hwmon_pwm_input:
+				*val = ctx->pwm_value;
+				break;
+			case hwmon_pwm_enable:
+				*val = ctx->pwm_enable;
+				break;
+			default:
+				return -ENOTSUPP;
+		}
 		return 0;
-
 	case hwmon_fan:
 		*val = ctx->tachs[channel].rpm;
 		return 0;
-
 	default:
 		return -ENOTSUPP;
 	}
@@ -167,7 +195,13 @@ static umode_t pwm_fan_is_visible(const void *data,
 {
 	switch (type) {
 	case hwmon_pwm:
-		return 0644;
+		switch (attr) {
+			case hwmon_pwm_input:
+			case hwmon_pwm_enable:
+				return 0644;
+			default:
+				return 0;
+			}
 
 	case hwmon_fan:
 		return 0444;
@@ -347,6 +381,8 @@ static int pwm_fan_probe(struct platform_device *pdev)
 		dev_err(dev, "Configured period too big\n");
 		return -EINVAL;
 	}
+	/* Enable manual mode */
+	ctx->pwm_enable = true;
 
 	/* Set duty cycle to maximum allowed and enable PWM output */
 	ret = __set_pwm(ctx, MAX_PWM);
